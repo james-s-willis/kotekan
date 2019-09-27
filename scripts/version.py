@@ -84,7 +84,7 @@ def get_version(
     """
 
     # Commands to get git information.
-    git_describe_cmd = ["git", "describe", "--tags", "--long", "--dirty"]
+    git_describe_cmd = ["git", "describe", "--tags", "--long", "--dirty", "--always"]
     git_remote_cmd = ["git", "ls-remote", "--tags"]
     git_branch_cmd = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
 
