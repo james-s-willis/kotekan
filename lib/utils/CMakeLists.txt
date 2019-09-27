@@ -24,6 +24,7 @@ set ( KOTEKAN_UTIL_SOURCES
       datasetState.cpp
       restClient.cpp
       BipBuffer.cpp
+      network_functions.cpp
     )
 
 if (${USE_HDF5})
