@@ -7,16 +7,16 @@
 std::map<size_t, std::string> datasetState::_registered_names;
 
 // Initialise static map of types
-std::map<std::string, std::function<state_uptr(json&, state_uptr)>>&
+std::map<std::string, std::function<state_uptr(json&)>>&
 datasetState::_registered_types() {
-    static std::map<std::string, std::function<state_uptr(json&, state_uptr)>> _register;
+    static std::map<std::string, std::function<state_uptr(json&)>> _register;
 
     return _register;
 }
 
-state_uptr datasetState::_create(std::string name, json& data, state_uptr inner) {
+state_uptr datasetState::_create(std::string name, json& data) {
     try {
-        return _registered_types()[name](data, std::move(inner));
+        return _registered_types()[name](data);
     } catch (std::bad_function_call& e) {
         WARN_NON_OO("datasetManager: no state of type {:s} is registered.", name);
         return nullptr;
@@ -29,14 +29,8 @@ state_uptr datasetState::from_json(json& data) {
     std::string dtype = data.at("type");
     json d = data.at("data");
 
-    // Get the inner if it exists
-    state_uptr inner = nullptr;
-    if (data.count("inner")) {
-        inner = datasetState::from_json(data["inner"]);
-    }
-
     // Create and return the
-    return datasetState::_create(dtype, d, std::move(inner));
+    return datasetState::_create(dtype, d);
 }
 
 json datasetState::to_json() const {
@@ -45,11 +39,6 @@ json datasetState::to_json() const {
 
     // Use RTTI to serialise the type of datasetState this is
     j["type"] = datasetState::_registered_names[typeid(*this).hash_code()];
-
-    // Recursively serialise any inner states
-    if (_inner_state != nullptr) {
-        j["inner"] = _inner_state->to_json();
-    }
     j["data"] = data_to_json();
 
     return j;
@@ -64,13 +53,6 @@ std::set<std::string> datasetState::types() const {
     std::set<std::string> types;
 
     types.insert(datasetState::_registered_names[typeid(*this).hash_code()]);
-
-    const datasetState* t = _inner_state.get();
-
-    while (t != nullptr) {
-        types.insert(datasetState::_registered_names[typeid(*t).hash_code()]);
-        t = t->_inner_state.get();
-    }
 
     return types;
 }

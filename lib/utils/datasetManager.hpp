@@ -170,15 +170,7 @@ private:
  *
  * A stage that changes the state of the dataset in the frames it processes
  * should inform the datasetManager by adding a new state and dataset.
- *  If a stage is altering more than one type of dataset state, it can add
- * `inner` states to the one it passes to the dataset manager.
- * The following adds an input state as well as a product state. The
- * stage should then write `new_ds_id` to its outgoing frames.
- * ```
- * auto new_state = dm.add_state(std::make_unique<inputState>(
- *                              new_inputs, make_unique<prodState>(new_prods)));
- *  dset_id_t new_ds_id = dm.add_dataset(old_dataset_id, new_state);
- * ```
+ * <insert info about quickly adding multiple state>
  *
  *
  * The dataset broker is a centralized part of the dataset management system.
@@ -346,9 +338,6 @@ private:
 
     /**
      * @brief Get the states applied to generate the given dataset.
-     *
-     * @note This will flatten out inner state into the list. They are given the
-     * same dataset ID as their parents.
      *
      * @returns A vector of the dataset ID and the state that was
      *          applied to previous element in the vector to generate it.
@@ -550,8 +539,7 @@ inline const T* datasetManager::get_closest_ancestor(dset_id_t dset) {
         // Check if we can find requested state in dataset topology.
         // Walk up from the current node to the root.
         while (true) {
-            // Search for the requested type in each dataset (includes inner
-            // states).
+            // Search for the requested type in each dataset
             try {
                 if (_datasets.at(dset).types().count(
                         datasetState::_registered_names[typeid(T).hash_code()])) {
@@ -579,13 +567,6 @@ inline const T* datasetManager::get_closest_ancestor(dset_id_t dset) {
         const datasetState* state = nullptr;
         try {
             state = _states.at(ancestor).get();
-
-            // walk through the inner states until we find the right type
-            while (state != nullptr) {
-                if (typeid(*state).hash_code() == typeid(T).hash_code())
-                    return (const T*)state;
-                state = state->_inner_state.get();
-            }
         } catch (std::out_of_range& e) {
             DEBUG_NON_OO("datasetManager: requested state {:#x} not known locally.", ancestor);
         }
@@ -673,16 +654,14 @@ inline const T* datasetManager::request_state(state_id_t state_id) {
         // get a pointer out of that iterator
         const datasetState* s = (const datasetState*)new_state.first->second.get();
 
-        // find the inner state matching the type
-        while (true) {
-            if (typeid(T).hash_code() == typeid(*s).hash_code())
-                return (const T*)s;
-            if (s->_inner_state == nullptr)
-                throw std::runtime_error(fmt::format(
-                    fmt("Broker sent state that didn't match requested type ({:s}): {:s}"),
-                    datasetState::_registered_names[typeid(T).hash_code()],
-                    js_reply.at("state").dump(4)));
-            s = s->_inner_state.get();
+        // Check the state matches the type
+        if (typeid(T).hash_code() == typeid(*s).hash_code())
+            return (const T*)s;
+        else {
+            throw std::runtime_error(fmt::format(
+                fmt("Broker sent state that didn't match requested type ({:s}): {:s}"),
+                datasetState::_registered_names[typeid(T).hash_code()],
+                js_reply.at("state").dump(4)));
         }
     } catch (std::exception& e) {
         WARN_NON_OO("datasetManager: failure parsing reply received from broker after requesting "

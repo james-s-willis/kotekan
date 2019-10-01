@@ -479,12 +479,6 @@ const std::vector<std::pair<dset_id_t, datasetState*>> datasetManager::ancestors
             break;
         }
 
-        // Walk over the inner states, given them all the same dataset id.
-        while (t != nullptr) {
-            a_list.emplace_back(dset, t);
-            t = t->_inner_state.get();
-        }
-
         // if this is the root dataset, we are done
         root = _datasets.at(dset).is_root();
 
