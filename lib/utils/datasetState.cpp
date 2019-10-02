@@ -2,13 +2,11 @@
 
 #include <typeinfo>
 
-
 // Static map of type names
 std::map<size_t, std::string> datasetState::_registered_names;
 
 // Initialise static map of types
-std::map<std::string, std::function<state_uptr(json&)>>&
-datasetState::_registered_types() {
+std::map<std::string, std::function<state_uptr(json&)>>& datasetState::_registered_types() {
     static std::map<std::string, std::function<state_uptr(json&)>> _register;
 
     return _register;
@@ -49,12 +47,23 @@ bool datasetState::equals(datasetState& s) const {
     return to_json() == s.to_json();
 }
 
-std::set<std::string> datasetState::types() const {
-    std::set<std::string> types;
+std::string datasetState::type() const {
+    return datasetState::_registered_names[typeid(*this).hash_code()];
+}
 
-    types.insert(datasetState::_registered_names[typeid(*this).hash_code()]);
 
-    return types;
+// TODO: this is a very weird place for this routine to be. Put it somewhere more sane.
+std::vector<stack_ctype> invert_stack(uint32_t num_stack,
+                                      const std::vector<rstack_ctype>& stack_map) {
+    std::vector<stack_ctype> res(num_stack);
+    size_t num_prod = stack_map.size();
+
+    for (uint32_t i = 0; i < num_prod; i++) {
+        uint32_t j = num_prod - i - 1;
+        res[stack_map[j].stack] = {j, stack_map[j].conjugate};
+    }
+
+    return res;
 }
 
 REGISTER_DATASET_STATE(freqState, "frequencies");

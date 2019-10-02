@@ -41,7 +41,6 @@ using state_uptr = std::unique_ptr<datasetState>;
  **/
 class datasetState {
 public:
-
     virtual ~datasetState(){};
 
     /**
@@ -93,7 +92,7 @@ public:
      * @brief Get names of this state and its inner states.
      * @return A set of state names.
      */
-    std::set<std::string> types() const;
+    std::string type() const;
 
     // Static map of type names
     static std::map<size_t, std::string> _registered_names;
@@ -162,8 +161,7 @@ public:
      * @param freqs The frequency information as a vector of
      *              {frequency ID, frequency index map}.
      */
-    freqState(std::vector<std::pair<uint32_t, freq_ctype>> freqs) :
-        _freqs(freqs) {};
+    freqState(std::vector<std::pair<uint32_t, freq_ctype>> freqs) : _freqs(freqs){};
 
     /**
      * @brief Get frequency information (read only).
@@ -213,8 +211,7 @@ public:
      * @param inputs The input information as a vector of
      *               input index maps.
      */
-    inputState(std::vector<input_ctype> inputs) :
-        _inputs(inputs){};
+    inputState(std::vector<input_ctype> inputs) : _inputs(inputs){};
 
     /**
      * @brief Get input information (read only).
@@ -263,8 +260,7 @@ public:
      * @param prods The product information as a vector of
      *              product index maps.
      */
-    prodState(std::vector<prod_ctype> prods) :
-        _prods(prods){};
+    prodState(std::vector<prod_ctype> prods) : _prods(prods){};
 
     /**
      * @brief Get product information (read only).
@@ -314,8 +310,7 @@ public:
      *              time index maps.
 
      */
-    timeState(std::vector<time_ctype> times) :
-        _times(times){};
+    timeState(std::vector<time_ctype> times) : _times(times){};
 
     /**
      * @brief Get time information (read only).
@@ -363,16 +358,14 @@ public:
      * @brief Constructor
      * @param ev The eigenvalues.
      */
-    eigenvalueState(std::vector<uint32_t> ev) :
-        _ev(ev){};
+    eigenvalueState(std::vector<uint32_t> ev) : _ev(ev){};
 
     /**
      * @brief Constructor
      * @param num_ev The number of eigenvalues. The indices will end up
      *               running from 0 to num_ev - 1
      */
-    eigenvalueState(size_t num_ev) :
-        _ev(num_ev) {
+    eigenvalueState(size_t num_ev) : _ev(num_ev) {
         std::iota(_ev.begin(), _ev.end(), 0);
     }
 
@@ -522,7 +515,8 @@ public:
      * @param instrument_name   The instrument name attribute.
      * @param git_version_tag   The git version tag attribute.
      */
-    metadataState(std::string weight_type, std::string instrument_name, std::string git_version_tag):
+    metadataState(std::string weight_type, std::string instrument_name,
+                  std::string git_version_tag) :
         _weight_type(weight_type),
         _instrument_name(instrument_name),
         _git_version_tag(git_version_tag) {}
@@ -627,9 +621,8 @@ public:
      * @brief Constructor
      * @param data  The dataset ID as serialized by
      *              acqDatasetIdState::to_json().
-     * @param inner An inner state or a nullptr.
      */
-    acqDatasetIdState(json& data, state_uptr inner) : datasetState(move(inner)) {
+    acqDatasetIdState(json& data) {
         try {
             _ds_id = data.get<dset_id_t>();
         } catch (std::exception& e) {
@@ -642,11 +635,9 @@ public:
     /**
      * @brief Constructor
      * @param ds_id    The dataset ID for the acquisition.
-     * @param inner    An inner state (optional).
      */
-    acqDatasetIdState(dset_id_t ds_id, state_uptr inner = nullptr) :
-        datasetState(move(inner)),
-        _ds_id(ds_id){};
+    acqDatasetIdState(dset_id_t ds_id) :
+        _ds_id(ds_id) {};
 
     /**
      * @brief Get dataset ID (read only).
