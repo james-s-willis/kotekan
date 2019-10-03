@@ -469,6 +469,7 @@ const std::vector<std::pair<dset_id_t, datasetState*>> datasetManager::ancestors
         datasetState* t;
         try {
             t = _states.at(_datasets.at(dset).state()).get();
+            a_list.emplace_back(dset, t);
         } catch (...) {
             // we don't have the base dataset
             break;
