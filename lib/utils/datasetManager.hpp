@@ -63,8 +63,7 @@ public:
     /**
      * @brief Dataset constructor. Omitting the base_dset will create a root dataset.
      * @param state      The state of this dataset.
-     * @param types      The set of state types that are different from the base
-     *                   dataset.
+     * @param type       The name of the dataset state type.
      * @param base_dset  The ID of the base datset. Omit to create a root dataset.
      */
     dataset(state_id_t state, std::string type, dset_id_t base_dset = 0) :
@@ -156,10 +155,10 @@ private:
  * const std::vector<input_ctype>& inputs = input_state->get_inputs();
  * ```
  *
- * A stage that changes the state of the dataset in the frames it processes
- * should inform the datasetManager by adding a new state and dataset.
- * <insert info about quickly adding multiple state>
- *
+ * A stage that changes the state of the dataset in the frames it processes should inform the
+ * datasetManager by adding a new state and dataset. If multiple states are being applied at the
+ * same time a vector of states can be passed to `add_dataset`. This causes datasets linking them to
+ * be generated, but only final one is returned.
  *
  * The dataset broker is a centralized part of the dataset management system.
  * Using it allows the synchronization of datasets and states between multiple
@@ -255,12 +254,18 @@ public:
      * If `use_dataset_broker` is set, this function will also register the new
      * state with the broker.
      *
-     * @param state The state to be added.
-     * @returns The id assigned to the state and a read-only pointer to the
-     * state.
+     * @param  args  Arguments forwarded through to the constructor of the sub-type.
+     * @returns      The id assigned to the state and a read-only pointer to the
+     *               state.
      **/
+// Sphinx can't correctly parse the template definition here, so we need to make sure Doxygen passes
+// on a sanitized version
+#ifdef _DOXYGEN_
+    template<typename T, typename... Args>
+#else
     template<typename T, typename... Args,
              typename std::enable_if_t<std::is_base_of<datasetState, T>::value>* = nullptr>
+#endif
     inline std::pair<state_id_t, const T*> create_state(Args&&... args);
 
     /**
