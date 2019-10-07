@@ -636,8 +636,7 @@ public:
      * @brief Constructor
      * @param ds_id    The dataset ID for the acquisition.
      */
-    acqDatasetIdState(dset_id_t ds_id) :
-        _ds_id(ds_id) {};
+    acqDatasetIdState(dset_id_t ds_id) : _ds_id(ds_id){};
 
     /**
      * @brief Get dataset ID (read only).
